@@ -3,7 +3,7 @@ var router = express.Router();
 var mongoose = require('mongoose');
 
 // our db model
-var Animal = require("../models/model.js");
+var Hill = require("../models/model.js");
 
 /**
  * GET '/'
@@ -14,7 +14,7 @@ var Animal = require("../models/model.js");
 router.get('/', function(req, res) {
   
   var jsonData = {
-  	'name': 'node-express-api-boilerplate',
+  	'name': 'pavment-server',
   	'api-status':'OK'
   }
 
@@ -40,44 +40,47 @@ router.post('/api/create', function(req, res){
 
     // pull out the information from the req.body
     var name = req.body.name;
-    var age = req.body.age;
-    var tags = req.body.tags; // split string into array
-    var weight = req.body.weight;
-    var color = req.body.color;
-    var url = req.body.url;
+    var locale = req.body.locale;
+    var tags = req.body.tags.split(","); // split string into array
+    var type = req.body.type;
+    var coords = req.body.coordinates.split(",");
+    var distance = req.body.distance;
+    var steepness = req.body.steepness;
+    var notes = req.body.notes;
 
     // hold all this data in an object
     // this object should be structured the same way as your db model
-    var animalObj = {
+    var hillObj = {
       name: name,
-      age: age,
+      locale: locale,
       tags: tags,
-      description: {
-        weight: weight,
-        color: color
+      path: {
+        coordinates: [[coords[0], coords[1]], [coords[2], coords[3]]]
       },
-      url: url
+      distance: distance,
+      steepness: steepness,
+      notes: notes
     };
 
-    // create a new animal model instance, passing in the object
-    var animal = new Animal(animalObj);
-
-    // now, save that animal instance to the database
+    // create a new hill model instance, passing in the object
+    var hill = new Hill(hillObj);
+console.log(hill);
+    // now, save that hill instance to the database
     // mongoose method, see http://mongoosejs.com/docs/api.html#model_Model-save    
-    animal.save(function(err,data){
+    hill.save(function(err,data){
       // if err saving, respond back with error
       if (err){
-        var error = {status:'ERROR', message: 'Error saving animal'};
+        var error = {status:'ERROR', message: 'Error saving hill'};
         return res.json(error);
       }
 
-      console.log('saved a new animal!');
+      console.log('saved a new hill!');
       console.log(data);
 
-      // now return the json data of the new animal
+      // now return the json data of the new hill
       var jsonData = {
         status: 'OK',
-        animal: data
+        hill: data
       }
 
       return res.json(jsonData);
@@ -87,8 +90,8 @@ router.post('/api/create', function(req, res){
 
 // /**
 //  * GET '/api/get/:id'
-//  * Receives a GET request specifying the animal to get
-//  * @param  {String} req.param('id'). The animalId
+//  * Receives a GET request specifying the hill to get
+//  * @param  {String} req.param('id'). The HillId
 //  * @return {Object} JSON
 //  */
 
@@ -97,18 +100,18 @@ router.get('/api/get/:id', function(req, res){
   var requestedId = req.param('id');
 
   // mongoose method, see http://mongoosejs.com/docs/api.html#model_Model.findById
-  Animal.findById(requestedId, function(err,data){
+  Hill.findById(requestedId, function(err,data){
 
     // if err or no user found, respond with error 
     if(err || data == null){
-      var error = {status:'ERROR', message: 'Could not find that animal'};
+      var error = {status:'ERROR', message: 'Could not find that hill'};
        return res.json(error);
     }
 
-    // otherwise respond with JSON data of the animal
+    // otherwise respond with JSON data of the hill
     var jsonData = {
       status: 'OK',
-      animal: data
+      hill: data
     }
 
     return res.json(jsonData);
@@ -118,17 +121,17 @@ router.get('/api/get/:id', function(req, res){
 
 // /**
 //  * GET '/api/get'
-//  * Receives a GET request to get all animal details
+//  * Receives a GET request to get all Hill details
 //  * @return {Object} JSON
 //  */
 
 router.get('/api/get', function(req, res){
 
   // mongoose method to find all, see http://mongoosejs.com/docs/api.html#model_Model.find
-  Animal.find(function(err, data){
-    // if err or no animals found, respond with error 
+  Hill.find(function(err, data){
+    // if err or no hills found, respond with error 
     if(err || data == null){
-      var error = {status:'ERROR', message: 'Could not find animals'};
+      var error = {status:'ERROR', message: 'Could not find hills'};
       return res.json(error);
     }
 
@@ -136,7 +139,7 @@ router.get('/api/get', function(req, res){
 
     var jsonData = {
       status: 'OK',
-      animals: data
+      hills: data
     } 
 
     res.json(jsonData);
@@ -147,9 +150,9 @@ router.get('/api/get', function(req, res){
 
 // /**
 //  * POST '/api/update/:id'
-//  * Receives a POST request with data of the animal to update, updates db, responds back
-//  * @param  {String} req.param('id'). The animalId to update
-//  * @param  {Object} req. An object containing the different attributes of the Animal
+//  * Receives a POST request with data of the Hill to update, updates db, responds back
+//  * @param  {String} req.param('id'). The HillId to update
+//  * @param  {Object} req. An object containing the different attributes of the Hill
 //  * @return {Object} JSON
 //  */
 
@@ -160,7 +163,8 @@ router.post('/api/update/:id', function(req, res){
    var dataToUpdate = {}; // a blank object of data to update
 
     // pull out the information from the req.body and add it to the object to update
-    var name, age, weight, color, url; 
+    var name, locale, path, distance, steepness, notes; 
+    var tags = []; // blank array to hold tags
 
     // we only want to update any field if it actually is contained within the req.body
     // otherwise, leave it alone.
@@ -169,10 +173,17 @@ router.post('/api/update/:id', function(req, res){
       // add to object that holds updated data
       dataToUpdate['name'] = name;
     }
-    if(req.body.age) {
-      age = req.body.age;
+
+    if(req.body.tags){
+      tags = req.body.tags.split(","); // split string into array
       // add to object that holds updated data
-      dataToUpdate['age'] = age;
+      dataToUpdate['tags'] = tags;
+    }
+
+    if(req.body.path) {
+      path = req.body.path;
+      // add to object that holds updated data
+      dataToUpdate['path'] = path;
     }
     if(req.body.weight) {
       weight = req.body.weight;
@@ -192,32 +203,25 @@ router.post('/api/update/:id', function(req, res){
       dataToUpdate['url'] = url;
     }
 
-    var tags = []; // blank array to hold tags
-    if(req.body.tags){
-      tags = req.body.tags.split(","); // split string into array
-      // add to object that holds updated data
-      dataToUpdate['tags'] = tags;
-    }
-
 
     console.log('the data to update is ' + JSON.stringify(dataToUpdate));
 
-    // now, update that animal
+    // now, update that Hill
     // mongoose method findByIdAndUpdate, see http://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate  
-    Animal.findByIdAndUpdate(requestedId, dataToUpdate, function(err,data){
+    Hill.findByIdAndUpdate(requestedId, dataToUpdate, function(err,data){
       // if err saving, respond back with error
       if (err){
-        var error = {status:'ERROR', message: 'Error updating animal'};
+        var error = {status:'ERROR', message: 'Error updating Hill'};
         return res.json(error);
       }
 
-      console.log('updated the animal!');
+      console.log('updated the Hill!');
       console.log(data);
 
       // now return the json data of the new person
       var jsonData = {
         status: 'OK',
-        animal: data
+        Hill: data
       }
 
       return res.json(jsonData);
@@ -228,8 +232,8 @@ router.post('/api/update/:id', function(req, res){
 
 /**
  * GET '/api/delete/:id'
- * Receives a GET request specifying the animal to delete
- * @param  {String} req.param('id'). The animalId
+ * Receives a GET request specifying the Hill to delete
+ * @param  {String} req.param('id'). The HillId
  * @return {Object} JSON
  */
 
@@ -238,9 +242,9 @@ router.get('/api/delete/:id', function(req, res){
   var requestedId = req.param('id');
 
   // Mongoose method to remove, http://mongoosejs.com/docs/api.html#model_Model.findByIdAndRemove
-  Animal.findByIdAndRemove(requestedId,function(err, data){
+  Hill.findByIdAndRemove(requestedId,function(err, data){
     if(err || data == null){
-      var error = {status:'ERROR', message: 'Could not find that animal to delete'};
+      var error = {status:'ERROR', message: 'Could not find that Hill to delete'};
       return res.json(error);
     }
 
