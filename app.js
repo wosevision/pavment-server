@@ -4,10 +4,12 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var cors = require('cors');
 var mongoose = require('mongoose');
 var env = require('node-env-file');
 
 var app = express();
+app.use(cors());
 
 // if in development mode, load .env variables
 if (app.get("env") === "development") {
