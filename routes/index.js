@@ -28,15 +28,13 @@ router.get('/sample-page', function(req,res){
 })
 
 // /**
-//  * POST '/api/create'
-//  * Receives a POST request of the new user and location, saves to db, responds back
-//  * @param  {Object} req. An object containing the different attributes of the Person
+//  * POST '/hills'
+//  * Receives a POST request of the new hill, saves Hill to db, responds back
+//  * @param  {Object} req. An object containing the different attributes of the Hill
 //  * @return {Object} JSON
 //  */
 
-router.post('/api/create', function(req, res){
-
-    console.log(req.body);
+router.post('/hills', function(req, res){
 
     // pull out the information from the req.body
     var name = req.body.name;
@@ -64,7 +62,7 @@ router.post('/api/create', function(req, res){
 
     // create a new hill model instance, passing in the object
     var hill = new Hill(hillObj);
-console.log(hill);
+
     // now, save that hill instance to the database
     // mongoose method, see http://mongoosejs.com/docs/api.html#model_Model-save    
     hill.save(function(err,data){
@@ -89,13 +87,13 @@ console.log(hill);
 });
 
 // /**
-//  * GET '/api/get/:id'
+//  * GET '/hills/:id'
 //  * Receives a GET request specifying the hill to get
 //  * @param  {String} req.param('id'). The HillId
 //  * @return {Object} JSON
 //  */
 
-router.get('/api/get/:id', function(req, res){
+router.get('/hills/:id', function(req, res){
 
   var requestedId = req.param('id');
 
@@ -125,7 +123,7 @@ router.get('/api/get/:id', function(req, res){
 //  * @return {Object} JSON
 //  */
 
-router.get('/api/get', function(req, res){
+router.get('/hills', function(req, res){
 
   // mongoose method to find all, see http://mongoosejs.com/docs/api.html#model_Model.find
   Hill.find(function(err, data){
@@ -156,7 +154,7 @@ router.get('/api/get', function(req, res){
 //  * @return {Object} JSON
 //  */
 
-router.post('/api/update/:id', function(req, res){
+router.put('/hills/:id', function(req, res){
 
    var requestedId = req.param('id');
 
@@ -237,7 +235,7 @@ router.post('/api/update/:id', function(req, res){
  * @return {Object} JSON
  */
 
-router.get('/api/delete/:id', function(req, res){
+router.delete('/hills/:id', function(req, res){
 
   var requestedId = req.param('id');
 
