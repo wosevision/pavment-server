@@ -15,7 +15,7 @@ router.get('/', function(req, res) {
   
   var jsonData = {
   	'name': 'pavment-server',
-  	'api-status':'OK'
+  	'status':'200'
   }
 
   // respond with json data
@@ -25,7 +25,75 @@ router.get('/', function(req, res) {
 // simple route to show an HTML page
 router.get('/sample-page', function(req,res){
   res.render('sample.html')
+});
+
+// /**
+//  * GET '/hills'
+//  * Receives a GET request to get all Hill details
+//  * @return {Object} JSON
+//  */
+
+router.get('/hills', function(req, res){
+
+  // mongoose method to find all, see http://mongoosejs.com/docs/api.html#model_Model.find
+  Hill.find(function(err, data){
+
+    // if err or no user found, respond with error 
+    if(err){
+      var error = {status:'400', message: 'Error retrieving hills'};
+       return res.json(error);
+    }
+    if(data == null){
+      var error = {status:'404', message: 'No hills saved'};
+       return res.json(error);
+    }
+
+    // otherwise, respond with the data 
+
+    var jsonData = {
+      status: '200',
+      data: data
+    } 
+
+    res.json(jsonData);
+
+  })
+
 })
+
+// /**
+//  * GET '/hills/:id'
+//  * Receives a GET request specifying the Hill to retrieve
+//  * @param  {String} req.param('id'). The HillId
+//  * @return {Object} JSON
+//  */
+
+router.get('/hills/:id', function(req, res){
+
+  var requestedId = req.param('id');
+
+  // mongoose method, see http://mongoosejs.com/docs/api.html#model_Model.findById
+  Hill.findById(requestedId, function(err,data){
+
+    // if err or no user found, respond with error 
+    if(err){
+      var error = {status:'400', message: 'Error retrieving hill'};
+       return res.json(error);
+    }
+    if(data == null){
+      var error = {status:'404', message: 'Could not locate hill'};
+       return res.json(error);
+    }
+    // otherwise respond with JSON data of the hill
+    var jsonData = {
+      status: '200',
+      data: data
+    }
+
+    return res.json(jsonData);
+  
+  })
+});
 
 // /**
 //  * POST '/hills'
@@ -68,7 +136,7 @@ router.post('/hills', function(req, res){
     hill.save(function(err,data){
       // if err saving, respond back with error
       if (err){
-        var error = {status:'ERROR', message: 'Error saving hill'};
+        var error = {status:'400', message: 'Error saving hill'};
         return res.json(error);
       }
 
@@ -77,8 +145,8 @@ router.post('/hills', function(req, res){
 
       // now return the json data of the new hill
       var jsonData = {
-        status: 'OK',
-        hill: data
+        status: '200',
+        data: data
       }
 
       return res.json(jsonData);
@@ -87,74 +155,14 @@ router.post('/hills', function(req, res){
 });
 
 // /**
-//  * GET '/hills/:id'
-//  * Receives a GET request specifying the hill to get
-//  * @param  {String} req.param('id'). The HillId
-//  * @return {Object} JSON
-//  */
-
-router.get('/hills/:id', function(req, res){
-
-  var requestedId = req.param('id');
-
-  // mongoose method, see http://mongoosejs.com/docs/api.html#model_Model.findById
-  Hill.findById(requestedId, function(err,data){
-
-    // if err or no user found, respond with error 
-    if(err || data == null){
-      var error = {status:'ERROR', message: 'Could not find that hill'};
-       return res.json(error);
-    }
-
-    // otherwise respond with JSON data of the hill
-    var jsonData = {
-      status: 'OK',
-      hill: data
-    }
-
-    return res.json(jsonData);
-  
-  })
-})
-
-// /**
-//  * GET '/api/get'
-//  * Receives a GET request to get all Hill details
-//  * @return {Object} JSON
-//  */
-
-router.get('/hills', function(req, res){
-
-  // mongoose method to find all, see http://mongoosejs.com/docs/api.html#model_Model.find
-  Hill.find(function(err, data){
-    // if err or no hills found, respond with error 
-    if(err || data == null){
-      var error = {status:'ERROR', message: 'Could not find hills'};
-      return res.json(error);
-    }
-
-    // otherwise, respond with the data 
-
-    var jsonData = {
-      status: 'OK',
-      hills: data
-    } 
-
-    res.json(jsonData);
-
-  })
-
-})
-
-// /**
-//  * POST '/api/update/:id'
-//  * Receives a POST request with data of the Hill to update, updates db, responds back
+//  * PUT '/hills/:id'
+//  * Receives a PUT request with data of the Hill to update, updates db, responds back
 //  * @param  {String} req.param('id'). The HillId to update
 //  * @param  {Object} req. An object containing the different attributes of the Hill
 //  * @return {Object} JSON
 //  */
 
-router.put('/hills/:id', function(req, res){
+router.put('/hills/:id', function(req, res) {
 
    var requestedId = req.param('id');
 
@@ -207,55 +215,66 @@ router.put('/hills/:id', function(req, res){
     // now, update that Hill
     // mongoose method findByIdAndUpdate, see http://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate  
     Hill.findByIdAndUpdate(requestedId, dataToUpdate, function(err,data){
-      // if err saving, respond back with error
-      if (err){
-        var error = {status:'ERROR', message: 'Error updating Hill'};
-        return res.json(error);
+
+      // if err or no user found, respond with error 
+      if(err){
+        var error = {status:'400', message: 'Error updating hill'};
+         return res.json(error);
+      }
+      if(data == null){
+        var error = {status:'404', message: 'Could not locate hill'};
+         return res.json(error);
       }
 
-      console.log('updated the Hill!');
+      console.log('Hill updated!');
       console.log(data);
 
       // now return the json data of the new person
       var jsonData = {
-        status: 'OK',
-        Hill: data
+        status: '200',
+        data: data
       }
 
       return res.json(jsonData);
 
-    })
+    });
 
-})
+});
 
 /**
- * GET '/api/delete/:id'
- * Receives a GET request specifying the Hill to delete
+ * DELETE '/hills/:id'
+ * Receives a DELETE request specifying the Hill to delete
  * @param  {String} req.param('id'). The HillId
  * @return {Object} JSON
  */
 
-router.delete('/hills/:id', function(req, res){
+router.delete('/hills/:id', function(req, res) {
 
   var requestedId = req.param('id');
 
   // Mongoose method to remove, http://mongoosejs.com/docs/api.html#model_Model.findByIdAndRemove
   Hill.findByIdAndRemove(requestedId,function(err, data){
-    if(err || data == null){
-      var error = {status:'ERROR', message: 'Could not find that Hill to delete'};
-      return res.json(error);
+
+    // if err or no user found, respond with error 
+    if(err){
+      var error = {status:'400', message: 'Error deleting hill'};
+       return res.json(error);
+    }
+    if(data == null){
+      var error = {status:'404', message: 'Could not locate hill'};
+       return res.json(error);
     }
 
     // otherwise, respond back with success
     var jsonData = {
-      status: 'OK',
-      message: 'Successfully deleted id ' + requestedId
+      status: '200',
+      message: 'Successfully deleted hill ID ' + requestedId
     }
 
     res.json(jsonData);
 
-  })
+  });
 
-})
+});
 
 module.exports = router;
