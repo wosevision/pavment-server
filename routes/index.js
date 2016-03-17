@@ -109,7 +109,7 @@ router.post('/hills', function(req, res){
     var locale = req.body.locale;
     var tags = req.body.tags.split(","); // split string into array
     var type = req.body.type;
-    var coords = req.body.coordinates.split(",");
+    var coordinates = req.body.coordinates.split(",");
     var distance = req.body.distance;
     var steepness = req.body.steepness;
     var notes = req.body.notes;
@@ -121,7 +121,7 @@ router.post('/hills', function(req, res){
       locale: locale,
       tags: tags,
       path: {
-        coordinates: [[coords[0], coords[1]], [coords[2], coords[3]]]
+        coordinates: [ [ parseFloat(coordinates[0]), parseFloat(coordinates[1]) ], [ parseFloat(coordinates[2]), parseFloat(coordinates[3]) ] ]
       },
       distance: distance,
       steepness: steepness,
@@ -164,49 +164,44 @@ router.post('/hills', function(req, res){
 
 router.put('/hills/:id', function(req, res) {
 
-   var requestedId = req.param('id');
+    var requestedId = req.param('id');
 
-   var dataToUpdate = {}; // a blank object of data to update
+    var dataToUpdate = {}; // a blank object of data to update
 
     // pull out the information from the req.body and add it to the object to update
-    var name, locale, path, distance, steepness, notes; 
-    var tags = []; // blank array to hold tags
+    var name, locale, distance, steepness, notes; 
+    var tags, coordinates = []; // blank array to hold tags
 
     // we only want to update any field if it actually is contained within the req.body
     // otherwise, leave it alone.
     if(req.body.name) {
       name = req.body.name;
-      // add to object that holds updated data
-      dataToUpdate['name'] = name;
+      dataToUpdate.name = name;
     }
-
+    if(req.body.locale) {
+      locale = req.body.locale;
+      dataToUpdate.locale = locale;
+    }
+    if(req.body.distance) {
+      distance = parseFloat(req.body.distance);
+      dataToUpdate.distance = distance;
+    }
+    if(req.body.steepness) {
+      distance = parseFloat(req.body.distance);
+      dataToUpdate.distance = distance;
+    }
+    if(req.body.coordinates) {
+      coordinates = req.body.coordinates.split(",");
+      dataToUpdate.path = {};
+      dataToUpdate.path.coordinates = [ [ parseFloat(coordinates[0]), parseFloat(coordinates[1]) ], [ parseFloat(coordinates[2]), parseFloat(coordinates[3]) ] ];
+    }
     if(req.body.tags){
-      tags = req.body.tags.split(","); // split string into array
-      // add to object that holds updated data
-      dataToUpdate['tags'] = tags;
+      tags = req.body.tags.split(",");
+      dataToUpdate.tags = tags;
     }
-
-    if(req.body.path) {
-      path = req.body.path;
-      // add to object that holds updated data
-      dataToUpdate['path'] = path;
-    }
-    if(req.body.weight) {
-      weight = req.body.weight;
-      // add to object that holds updated data
-      dataToUpdate['description'] = {};
-      dataToUpdate['description']['weight'] = weight;
-    }
-    if(req.body.color) {
-      color = req.body.color;
-      // add to object that holds updated data
-      if(!dataToUpdate['description']) dataToUpdate['description'] = {};
-      dataToUpdate['description']['color'] = color;
-    }
-    if(req.body.url) {
-      url = req.body.url;
-      // add to object that holds updated data
-      dataToUpdate['url'] = url;
+    if(req.body.notes) {
+      notes = req.body.notes;
+      dataToUpdate.notes = notes;
     }
 
 

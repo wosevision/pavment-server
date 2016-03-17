@@ -16,7 +16,7 @@ var hillSchema = new Schema({
 	distance: Number,
 	steepness: Number,
 	notes: String,
-	dateAdded : { type: Date, default: Date.now },
+	dateAdded : { type: Date, default: Date.now }
 });
 
 // export 'Animal' model so we can interact with it in other files
